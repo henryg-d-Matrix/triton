@@ -358,13 +358,13 @@ def add_cuda_stages(arch, extern_libs, stages):
 
 
 def compile(fn, **kwargs):
-    arch = get_architecture_descriptor(kwargs.get("cc", None))
-    is_cuda = _is_cuda(arch)
+    #arch = get_architecture_descriptor(kwargs.get("cc", None))
+    #is_cuda = _is_cuda(arch)
     context = _triton.ir.context()
     asm = dict()
     constants = kwargs.get("constants", dict())
     num_warps = kwargs.get("num_warps", 4)
-    num_stages = kwargs.get("num_stages", 3 if is_cuda and arch >= 75 else 2)
+    #num_stages = kwargs.get("num_stages", 3 if is_cuda and arch >= 75 else 2)
     extern_libs = kwargs.get("extern_libs", dict())
     if extern_libs is None:
         extern_libs = dict()
@@ -373,15 +373,15 @@ def compile(fn, **kwargs):
     stages = dict()
     stages["ast"] = (lambda path: fn, None)
     stages["ttir"] = (lambda path: parse_mlir_module(path, context),
-                      lambda src: optimize_ttir(ast_to_ttir(src, signature, configs[0], constants, debug=debug), arch))
-    stages["ttgir"] = (lambda path: parse_mlir_module(path, context),
-                       lambda src: optimize_ttgir(ttir_to_ttgir(src, num_warps), num_stages, arch))
-    stages["llir"] = (lambda path: Path(path).read_text(),
-                      lambda src: ttgir_to_llir(src, extern_libs, arch))
-    if is_cuda:
-        add_cuda_stages(arch, extern_libs, stages)
-    else:
-        add_rocm_stages(arch, extern_libs, stages)
+                      lambda src: ast_to_ttir(src, signature, configs[0], constants, debug=debug))
+    #stages["ttgir"] = (lambda path: parse_mlir_module(path, context),
+    #                   lambda src: optimize_ttgir(ttir_to_ttgir(src, num_warps), num_stages, arch))
+    #stages["llir"] = (lambda path: Path(path).read_text(),
+    #                  lambda src: ttgir_to_llir(src, extern_libs, arch))
+    #if is_cuda:
+    #    add_cuda_stages(arch, extern_libs, stages)
+    #else:
+    #    add_rocm_stages(arch, extern_libs, stages)
 
     # find out the signature of the function
     if isinstance(fn, triton.runtime.JITFunction):
@@ -434,7 +434,7 @@ def compile(fn, **kwargs):
             metadata = json.load(f)
     else:
         metadata = {"num_warps": num_warps,
-                    "num_stages": num_stages,
+                    "num_stages": 3,
                     "constants": _get_jsonable_constants(constants),
                     "debug": debug}
         if ext == "ptx":

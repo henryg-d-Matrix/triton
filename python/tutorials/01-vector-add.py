@@ -53,6 +53,7 @@ def add_kernel(
     tl.store(output_ptr + offsets, output, mask=mask)
 
 
+
 # %%
 # Let's also declare a helper function to (1) allocate the `z` tensor
 # and (2) enqueue the above kernel with appropriate grid/block sizes:
@@ -61,7 +62,7 @@ def add_kernel(
 def add(x: torch.Tensor, y: torch.Tensor):
     # We need to preallocate the output.
     output = torch.empty_like(x)
-    assert x.is_cuda and y.is_cuda and output.is_cuda
+#    assert x.is_cuda and y.is_cuda and output.is_cuda
     n_elements = output.numel()
     # The SPMD launch grid denotes the number of kernel instances that run in parallel.
     # It is analogous to CUDA launch grids. It can be either Tuple[int], or Callable(metaparameters) -> Tuple[int].
@@ -76,14 +77,13 @@ def add(x: torch.Tensor, y: torch.Tensor):
     # running asynchronously at this point.
     return output
 
-
 # %%
 # We can now use the above function to compute the element-wise sum of two `torch.tensor` objects and test its correctness:
 
 torch.manual_seed(0)
 size = 98432
-x = torch.rand(size, device='cuda')
-y = torch.rand(size, device='cuda')
+x = torch.rand(size)
+y = torch.rand(size)
 output_torch = x + y
 output_triton = add(x, y)
 print(output_torch)
